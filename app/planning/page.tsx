@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProjectStore } from '@/store/project'
+import { useModelConfigStore } from '@/store/model-config'
 import PlanningMap from '@/components/PlanningMap'
+import NavBar from '@/components/NavBar'
 
 export default function PlanningPage() {
   const router = useRouter()
@@ -16,6 +18,7 @@ export default function PlanningPage() {
   const parsedOutline = useProjectStore(s => s.parsedOutline)
   const seriesPlan = useProjectStore(s => s.seriesPlan)
   const { setSeriesPlan } = useProjectStore()
+  const { settings: modelSettings } = useModelConfigStore()
 
   useEffect(() => {
     setMounted(true)
@@ -61,7 +64,7 @@ export default function PlanningPage() {
         const res = await fetch('/api/planning', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config, ideation }),
+          body: JSON.stringify({ config, ideation, modelSettings }),
         })
 
         const data = await res.json()
@@ -90,30 +93,7 @@ export default function PlanningPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* 导航栏 */}
-      <header className="border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
-          <button
-            onClick={() => router.push('/config')}
-            className="text-sm text-gray-400 hover:text-gray-600 transition"
-          >
-            ← 返回配置
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🔥</span>
-            <span className="font-bold text-gray-900">火花剧本</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1 ml-auto text-xs text-gray-400">
-            <span>① 选题策划</span>
-            <span>→</span>
-            <span>② 项目配置</span>
-            <span>→</span>
-            <span className="text-spark-600 font-semibold">③ 全集规划</span>
-            <span>→</span>
-            <span>④ 逐集生成</span>
-          </div>
-        </div>
-      </header>
+      <NavBar backHref="/config" backLabel="返回配置" step={3} />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
         <div className="mb-6 flex items-start justify-between gap-4">

@@ -1,15 +1,16 @@
 import { NextRequest } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { buildEpisodePrompt } from '@/lib/prompts/episode'
+import { streamCompletion, getModelId } from '@/lib/api-client'
+import { DEFAULT_SETTINGS } from '@/lib/model-config'
 import type { ProjectConfig, SeriesPlan, EpisodeOutline } from '@/lib/types'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import type { ModelSettings } from '@/lib/model-config'
 
 export async function POST(req: NextRequest) {
   let config: ProjectConfig
   let plan: SeriesPlan
   let episodeOutline: EpisodeOutline
   let previousHook: string | null
+  let modelSettings: ModelSettings
 
   try {
     const body = await req.json()
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
     plan = body.plan
     episodeOutline = body.episodeOutline
     previousHook = body.previousHook ?? null
+    modelSettings = body.modelSettings ?? DEFAULT_SETTINGS
 
     if (!config || !plan || !episodeOutline) {
       return new Response(
@@ -31,37 +33,13 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const model = getModelId(modelSettings, 'episode')
   const prompt = buildEpisodePrompt(config, plan, episodeOutline, previousHook)
-  const encoder = new TextEncoder()
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const anthropicStream = client.messages.stream({
-          model: 'claude-opus-4-5',
-          max_tokens: 4096,
-          messages: [{ role: 'user', content: prompt }],
-        })
-
-        for await (const event of anthropicStream) {
-          if (
-            event.type === 'content_block_delta' &&
-            event.delta.type === 'text_delta'
-          ) {
-            const data = `data: ${JSON.stringify({ text: event.delta.text })}\n\n`
-            controller.enqueue(encoder.encode(data))
-          }
-        }
-
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
-      } catch (error) {
-        console.error('[episode] stream error:', error)
-        const errorData = `data: ${JSON.stringify({ error: '生成中断，请重试' })}\n\n`
-        controller.enqueue(encoder.encode(errorData))
-        controller.close()
-      }
-    },
+  const stream = streamCompletion(modelSettings, {
+    model,
+    maxTokens: 4096,
+    messages: [{ role: 'user', content: prompt }],
   })
 
   return new Response(stream, {

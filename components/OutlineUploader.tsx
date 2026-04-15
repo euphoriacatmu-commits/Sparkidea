@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import type { ParsedOutline } from '@/lib/types'
+import { useModelConfigStore } from '@/store/model-config'
 
 interface OutlineUploaderProps {
   onParsed: (outline: ParsedOutline) => void
@@ -12,6 +13,7 @@ export default function OutlineUploader({ onParsed }: OutlineUploaderProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
+  const { settings } = useModelConfigStore()
 
   const processFile = useCallback(async (file: File) => {
     setError(null)
@@ -21,6 +23,7 @@ export default function OutlineUploader({ onParsed }: OutlineUploaderProps) {
     try {
       const formData = new FormData()
       formData.append('file', file)
+      formData.append('modelSettings', JSON.stringify(settings))
 
       const res = await fetch('/api/parse-outline', {
         method: 'POST',

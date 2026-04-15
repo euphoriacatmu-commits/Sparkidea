@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useProjectStore } from '@/store/project'
+import { useModelConfigStore } from '@/store/model-config'
 import QualityAlert from './QualityAlert'
 import type { Episode, EpisodeMetadata, HookType } from '@/lib/types'
 
@@ -51,6 +52,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
     addEpisode,
     setQualityWarnings,
   } = useProjectStore()
+  const { settings: modelSettings } = useModelConfigStore()
 
   const existingEpisode: Episode | undefined = episodes[episodeNumber]
   const episodeOutline = seriesPlan?.episodes.find(e => e.episodeNumber === episodeNumber)
@@ -81,6 +83,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
           plan: seriesPlan,
           episodeOutline,
           previousHook,
+          modelSettings,
         }),
         signal: abortRef.current.signal,
       })
