@@ -1,0 +1,19 @@
+import type { Metadata } from 'next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: '火花剧本 - AI短剧创作助手',
+  description: '用 AI 生成爆款漫剧/短剧剧本，从想法到完整剧本全流程智能创作',
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="zh-CN">
+      <body className="antialiased min-h-screen bg-gray-50">{children}</body>
+    </html>
+  )
+}
