@@ -36,7 +36,8 @@ export interface ProjectStore {
   setSelectedCard: (card: IdeationCard) => void
   setConfig: (config: ProjectConfig) => void
   setParsedOutline: (outline: ParsedOutline) => void
-  setSeriesPlan: (plan: SeriesPlan) => void
+  setSeriesPlan: (plan: SeriesPlan | null) => void
+  resetForNewPlan: () => void  // 配置变更后清除旧规划，强制重新生成
   addEpisode: (episode: Episode) => void
   updateEpisode: (n: number, partial: Partial<Episode>) => void
   setCurrentEpisodeNumber: (n: number) => void
@@ -87,6 +88,13 @@ export const useProjectStore = create<ProjectStore>()(
       setParsedOutline: (outline) => set({ parsedOutline: outline }),
 
       setSeriesPlan: (plan) => set({ seriesPlan: plan }),
+
+      resetForNewPlan: () => set({
+        seriesPlan: null,
+        episodes: {},
+        generatedEpisodeNumbers: [],
+        qualityWarnings: [],
+      }),
 
       addEpisode: (episode) =>
         set((state) => ({

@@ -13,7 +13,7 @@ export default function ConfigPage() {
 
   const selectedCard = useProjectStore(s => s.selectedCard)
   const parsedOutline = useProjectStore(s => s.parsedOutline)
-  const { setConfig } = useProjectStore()
+  const { setConfig, resetForNewPlan } = useProjectStore()
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -25,6 +25,7 @@ export default function ConfigPage() {
 
   const handleSubmit = (config: ProjectConfig) => {
     setConfig(config)
+    resetForNewPlan()   // 清除旧规划和已生成的集，确保按新配置重新生成
     router.push('/planning')
   }
 
