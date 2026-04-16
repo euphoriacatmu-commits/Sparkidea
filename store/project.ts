@@ -7,6 +7,7 @@ import type {
   Episode,
   ParsedOutline,
   QualityWarning,
+  ProjectMeta,
 } from '@/lib/types'
 
 export interface ProjectStore {
@@ -19,6 +20,7 @@ export interface ProjectStore {
   seriesPlan: SeriesPlan | null
   episodes: Record<number, Episode>
   generatedEpisodeNumbers: number[]
+  savedProjects: ProjectMeta[]
 
   // UI 状态
   isLoading: boolean
@@ -30,6 +32,7 @@ export interface ProjectStore {
   // 操作
   setUserInput: (text: string) => void
   setIdeationCards: (cards: IdeationCard[]) => void
+  appendIdeationCards: (cards: IdeationCard[]) => void
   setSelectedCard: (card: IdeationCard) => void
   setConfig: (config: ProjectConfig) => void
   setParsedOutline: (outline: ParsedOutline) => void
@@ -42,6 +45,7 @@ export interface ProjectStore {
   setStreamingEpisodeNumber: (n: number | null) => void
   setIsLoading: (loading: boolean) => void
   setQualityWarnings: (warnings: QualityWarning[]) => void
+  saveCurrentProject: () => void
   reset: () => void
 }
 
@@ -54,6 +58,7 @@ const initialState = {
   seriesPlan: null,
   episodes: {},
   generatedEpisodeNumbers: [],
+  savedProjects: [] as ProjectMeta[],
   isLoading: false,
   currentEpisodeNumber: 1,
   streamingContent: '',
@@ -69,6 +74,11 @@ export const useProjectStore = create<ProjectStore>()(
       setUserInput: (text) => set({ userInput: text }),
 
       setIdeationCards: (cards) => set({ ideationCards: cards }),
+
+      appendIdeationCards: (cards) =>
+        set((state) => ({
+          ideationCards: [...state.ideationCards, ...cards].slice(0, 9),
+        })),
 
       setSelectedCard: (card) => set({ selectedCard: card }),
 
@@ -107,7 +117,29 @@ export const useProjectStore = create<ProjectStore>()(
 
       setQualityWarnings: (warnings) => set({ qualityWarnings: warnings }),
 
-      reset: () => set(initialState),
+      saveCurrentProject: () =>
+        set((state) => {
+          if (!state.config || !state.seriesPlan) return state
+          const id = state.seriesPlan.projectId
+          const meta: ProjectMeta = {
+            id,
+            title: state.config.title,
+            genres: state.config.genres,
+            platform: state.config.platform,
+            totalEpisodes: state.config.totalEpisodes,
+            episodeDuration: state.config.episodeDuration,
+            createdAt: state.savedProjects.find(p => p.id === id)?.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            episodesGenerated: state.generatedEpisodeNumbers.length,
+          }
+          const existing = state.savedProjects.findIndex(p => p.id === id)
+          const savedProjects = existing >= 0
+            ? state.savedProjects.map((p, i) => i === existing ? meta : p)
+            : [meta, ...state.savedProjects]
+          return { savedProjects }
+        }),
+
+      reset: () => set((state) => ({ ...initialState, savedProjects: state.savedProjects })),
     }),
     {
       name: 'sparkidea-project',
@@ -133,6 +165,7 @@ export const useProjectStore = create<ProjectStore>()(
         episodes: state.episodes,
         generatedEpisodeNumbers: state.generatedEpisodeNumbers,
         currentEpisodeNumber: state.currentEpisodeNumber,
+        savedProjects: state.savedProjects,
       }),
     }
   )

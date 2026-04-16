@@ -8,9 +8,11 @@ import type { ModelSettings } from '@/lib/model-config'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { userInput, modelSettings } = body as {
+    const { userInput, modelSettings, count = 3, existingTitles = [] } = body as {
       userInput: string
       modelSettings?: ModelSettings
+      count?: number
+      existingTitles?: string[]
     }
 
     if (!userInput?.trim()) {
@@ -22,8 +24,8 @@ export async function POST(req: NextRequest) {
 
     const { text } = await callCompletion(settings, {
       model,
-      maxTokens: 3000,
-      messages: [{ role: 'user', content: buildIdeationPrompt(userInput.trim()) }],
+      maxTokens: count === 3 ? 4000 : 3000,
+      messages: [{ role: 'user', content: buildIdeationPrompt(userInput.trim(), count, existingTitles) }],
     })
 
     const jsonMatch = text.match(/\[[\s\S]*\]/)

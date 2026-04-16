@@ -212,6 +212,22 @@ export interface ExportOptions {
 }
 
 // ——————————————————————————————————————
+// 项目频道元数据
+// ——————————————————————————————————————
+
+export interface ProjectMeta {
+  id: string
+  title: string
+  genres: Genre[]
+  platform: Platform
+  totalEpisodes: number
+  episodeDuration: number
+  createdAt: string
+  updatedAt: string
+  episodesGenerated: number
+}
+
+// ——————————————————————————————————————
 // 已保存的项目
 // ——————————————————————————————————————
 

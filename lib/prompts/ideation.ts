@@ -1,9 +1,12 @@
-export function buildIdeationPrompt(userInput: string): string {
+export function buildIdeationPrompt(userInput: string, count = 3, existingTitles: string[] = []): string {
+  const dedup = existingTitles.length > 0
+    ? `\n注意：以下选题标题已存在，请生成完全不同的新方案：${existingTitles.map(t => `「${t}」`).join('、')}`
+    : ''
   return `你是中国短视频AI漫剧首席选题策划，深度理解红果漫剧/抖音/视频号的流量逻辑。
 
-用户给你一个想法：「${userInput}」
+用户给你一个想法：「${userInput}」${dedup}
 
-输出3-5个选题方案。每个方案必须是完整的 JSON 对象，全部放在一个 JSON 数组中输出，不要有任何其他文字。
+输出${count}个选题方案。每个方案必须是完整的 JSON 对象，全部放在一个 JSON 数组中输出，不要有任何其他文字。
 
 JSON 结构：
 [
