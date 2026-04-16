@@ -25,16 +25,6 @@ export default function NavBar({ backHref, backLabel, step }: NavBarProps) {
 
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-screen-xl mx-auto px-4 h-14 flex items-center gap-3">
-          {/* 返回 */}
-          {backHref && (
-            <button
-              onClick={() => router.push(backHref)}
-              className="text-sm text-gray-400 hover:text-gray-600 transition shrink-0"
-            >
-              ← {backLabel ?? '返回'}
-            </button>
-          )}
-
           {/* Logo — 点击返回首页 */}
           <button
             onClick={() => router.push('/')}
@@ -59,8 +49,18 @@ export default function NavBar({ backHref, backLabel, step }: NavBarProps) {
             </div>
           )}
 
-          {/* 右侧：项目频道 + 模型配置按钮 */}
+          {/* 右侧：返回 + 项目频道 + 模型配置 */}
           <div className="ml-auto flex items-center gap-2">
+            {/* 返回按钮（移至右侧，项目按钮左侧） */}
+            {backHref && (
+              <button
+                onClick={() => router.push(backHref)}
+                className="hidden sm:flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs text-gray-500 hover:border-gray-300 hover:text-gray-700 transition"
+              >
+                ← {backLabel ?? '返回'}
+              </button>
+            )}
+
             {/* 项目频道 */}
             <button
               onClick={() => router.push('/projects')}
@@ -81,7 +81,7 @@ export default function NavBar({ backHref, backLabel, step }: NavBarProps) {
               <span>
                 {settings.provider === 'anthropic' ? '🤖' : settings.provider === 'openrouter' ? '🔀' : '🌋'}
               </span>
-              <span className="max-w-[80px] truncate">{PROVIDER_INFO[settings.provider].label}</span>
+              <span className="max-w-[80px] truncate">{PROVIDER_INFO[settings.provider]?.label ?? settings.provider}</span>
             </button>
             <button
               onClick={() => setShowConfig(true)}

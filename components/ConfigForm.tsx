@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ProjectConfig, Genre, Platform, Audience } from '@/lib/types'
 import { PLATFORM_SPECS } from '@/lib/platform-presets'
 
 interface ConfigFormProps {
   initialValues?: Partial<ProjectConfig>
+  isLoadingAI?: boolean   // AI 正在自动生成核心设定
   onSubmit: (config: ProjectConfig) => void
 }
 
@@ -55,7 +56,7 @@ const PACE_OPTIONS = [
 
 const MEME_LABELS = ['', '几乎无梗', '偶尔有梗', '适量网络感', '高密度互联网', '极度癫']
 
-export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps) {
+export default function ConfigForm({ initialValues, isLoadingAI, onSubmit }: ConfigFormProps) {
   const defaultPlatform: Platform = (initialValues?.platform as Platform) || 'douyin'
 
   const [form, setForm] = useState<ProjectConfig>({
@@ -75,6 +76,19 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
   })
 
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectConfig, string>>>({})
+
+  // AI 自动生成的核心设定到达后，同步到表单（不覆盖用户已输入的内容）
+  useEffect(() => {
+    if (initialValues?.coreConflict) {
+      setForm(prev => ({ ...prev, coreConflict: prev.coreConflict || initialValues.coreConflict || '' }))
+    }
+  }, [initialValues?.coreConflict])
+
+  useEffect(() => {
+    if (initialValues?.worldBuilding) {
+      setForm(prev => ({ ...prev, worldBuilding: prev.worldBuilding || initialValues.worldBuilding || '' }))
+    }
+  }, [initialValues?.worldBuilding])
 
   // 切换平台只更新平台字段，不覆盖用户已设定的集数和时长
   const updatePlatform = (platform: Platform) => {
@@ -197,10 +211,20 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
 
       {/* 核心剧本设定 */}
       <section className="flex flex-col gap-4">
-        <h2 className="text-base font-bold text-gray-800">
-          核心剧本设定
-          <span className="ml-2 text-sm font-normal text-gray-400">（选填，填写后 AI 规划更精准）</span>
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-bold text-gray-800">核心剧本设定</h2>
+          {isLoadingAI ? (
+            <span className="flex items-center gap-1 text-xs text-orange-500 font-medium">
+              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              AI 正在根据选题自动生成…
+            </span>
+          ) : (
+            <span className="text-sm font-normal text-gray-400">（选填，填写后 AI 规划更精准）</span>
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -211,8 +235,12 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
             rows={2}
             value={form.coreConflict || ''}
             onChange={e => setForm(prev => ({ ...prev, coreConflict: e.target.value }))}
-            placeholder="例：穷小子与豪门家族之间横跨三代的阶层战争，表面是爱情，底层是尊严"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-spark-400 focus:outline-none focus:ring-2 focus:ring-spark-100 resize-none"
+            placeholder={isLoadingAI ? '🤖 AI 生成中，稍后自动填入…' : '例：穷小子与豪门家族之间横跨三代的阶层战争，表面是爱情，底层是尊严'}
+            className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none transition
+              ${isLoadingAI
+                ? 'border-orange-200 bg-orange-50 text-gray-400 focus:border-orange-300 focus:ring-orange-100'
+                : 'border-gray-200 focus:border-spark-400 focus:ring-spark-100'
+              }`}
           />
         </div>
 
@@ -225,8 +253,12 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
             rows={3}
             value={form.worldBuilding || ''}
             onChange={e => setForm(prev => ({ ...prev, worldBuilding: e.target.value }))}
-            placeholder="例：近未来都市，AI取代大量白领工作，人类分化为「创意阶层」与「执行阶层」，主角是最后一批手写剧本的编剧…"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-spark-400 focus:outline-none focus:ring-2 focus:ring-spark-100 resize-none"
+            placeholder={isLoadingAI ? '🤖 AI 生成中，稍后自动填入…' : '例：近未来都市，AI取代大量白领工作，人类分化为「创意阶层」与「执行阶层」，主角是最后一批手写剧本的编剧…'}
+            className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none transition
+              ${isLoadingAI
+                ? 'border-orange-200 bg-orange-50 text-gray-400 focus:border-orange-300 focus:ring-orange-100'
+                : 'border-gray-200 focus:border-spark-400 focus:ring-spark-100'
+              }`}
           />
         </div>
       </section>

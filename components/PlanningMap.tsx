@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useProjectStore } from '@/store/project'
 import type { SeriesPlan, EpisodeOutline, PlotBomb } from '@/lib/types'
 
 interface PlanningMapProps {
@@ -67,6 +68,7 @@ function getEpisodeStyle(ep: EpisodeOutline): string {
 
 export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
   const router = useRouter()
+  const config = useProjectStore(s => s.config)
   const hotSet = new Set(plan.hotEpisodes || [])
   const bombMap = new Map(plan.plotBombs?.map(b => [b.episodeNumber, b]) || [])
 
@@ -177,6 +179,27 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
           </p>
         )}
       </div>
+
+      {/* 故事核心设定 */}
+      {(config?.coreConflict || config?.worldBuilding) && (
+        <div className="rounded-2xl border border-orange-100 bg-orange-50 p-6 shadow-sm">
+          <h3 className="text-sm font-bold text-orange-700 mb-4">故事核心设定</h3>
+          <div className="flex flex-col gap-4">
+            {config.coreConflict && (
+              <div>
+                <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-1">核心冲突</p>
+                <p className="text-sm text-orange-900 font-medium leading-relaxed">{config.coreConflict}</p>
+              </div>
+            )}
+            {config.worldBuilding && (
+              <div>
+                <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-1">世界观设定</p>
+                <p className="text-sm text-orange-800 leading-relaxed">{config.worldBuilding}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 情绪曲线 */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
