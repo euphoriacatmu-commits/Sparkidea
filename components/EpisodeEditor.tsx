@@ -12,14 +12,42 @@ interface EpisodeEditorProps {
 }
 
 function parseScriptMetadata(script: string, hookType: HookType): EpisodeMetadata {
-  const lines = script.split('\n')
   const totalChars = script.replace(/\s/g, '').length
 
-  // 粗略估计台词占比：以「：」开头的行或引号内内容
-  const dialogueLines = lines.filter(l =>
-    l.includes('：「') || l.includes('："') || /^[^【\n]{1,10}[：:]/.test(l)
-  )
-  const dialogueRatio = Math.min(0.95, dialogueLines.length / Math.max(lines.length, 1))
+  // 优先读取 AI 在"编剧备注"中自报的实际台词占比，保证与剧本底部数字一致
+  const reportedRatioMatch = script.match(/实际台词占比[：:]\s*约?\s*(\d+)%/)
+  let dialogueRatio: number
+
+  if (reportedRatioMatch) {
+    dialogueRatio = Math.min(0.99, parseInt(reportedRatioMatch[1]) / 100)
+  } else {
+    // 回退：在剧本正文段落里统计台词字符数 / 有效字符总数
+    const bodyMatch = script.match(/---剧本正文---([\s\S]*?)(?=---编剧备注---|$)/)
+    const bodyText = bodyMatch ? bodyMatch[1] : script
+    const bodyLines = bodyText.split('\n')
+
+    let inDialogue = false
+    let dialogueChars = 0
+    let meaningfulChars = 0
+
+    for (const line of bodyLines) {
+      const t = line.trim()
+      if (!t) continue
+      // 场景头、淡入淡出、△ 属于场景描述
+      if (/^(内景|外景|淡入|淡出|△)/.test(t)) { inDialogue = false; meaningfulChars += t.length; continue }
+      // 括号指示行
+      if (/^（.*）$/.test(t)) { meaningfulChars += t.length; continue }
+      // 角色名行（≤12字，不含空格）
+      if (/^[^\s（【]{1,12}(\（[^）]*\）)?$/.test(t) && t.length <= 12) { inDialogue = true; continue }
+      // 其余正文行
+      meaningfulChars += t.length
+      if (inDialogue) dialogueChars += t.length
+    }
+
+    dialogueRatio = meaningfulChars > 0
+      ? Math.min(0.99, dialogueChars / meaningfulChars)
+      : 0.5
+  }
 
   // 提取反转计数
   const twistMatch = script.match(/反转计数[：:]\s*本集共(\d+)个反转/)
