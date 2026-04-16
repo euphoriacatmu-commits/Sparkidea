@@ -12,6 +12,8 @@ export async function POST(req: NextRequest) {
   let previousHook: string | null
   let modelSettings: ModelSettings
 
+  let adoptedSuggestion: string | undefined
+
   try {
     const body = await req.json()
     config = body.config
@@ -19,6 +21,7 @@ export async function POST(req: NextRequest) {
     episodeOutline = body.episodeOutline
     previousHook = body.previousHook ?? null
     modelSettings = body.modelSettings ?? DEFAULT_SETTINGS
+    adoptedSuggestion = body.adoptedSuggestion ?? undefined
 
     if (!config || !plan || !episodeOutline) {
       return new Response(
@@ -34,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   const model = getModelId(modelSettings, 'episode')
-  const prompt = buildEpisodePrompt(config, plan, episodeOutline, previousHook)
+  const prompt = buildEpisodePrompt(config, plan, episodeOutline, previousHook, adoptedSuggestion)
 
   const stream = streamCompletion(modelSettings, {
     model,

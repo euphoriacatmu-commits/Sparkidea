@@ -105,6 +105,12 @@ export default function HomePage() {
               </svg>
             </button>
             <button
+              onClick={() => router.push('/projects')}
+              className="text-xs text-gray-400 hover:text-gray-600 transition"
+            >
+              📁 我的项目
+            </button>
+            <button
               onClick={() => reset()}
               className="text-xs text-gray-400 hover:text-gray-600 transition"
             >

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ToastContainer from '@/components/Toast'
 
 export const metadata: Metadata = {
   title: '火花剧本 - AI短剧创作助手',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className="antialiased min-h-screen bg-gray-50">{children}</body>
+      <body className="antialiased min-h-screen bg-gray-50">
+        {children}
+        <ToastContainer />
+      </body>
     </html>
   )
 }

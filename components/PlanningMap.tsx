@@ -1,19 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { SeriesPlan, EpisodeOutline } from '@/lib/types'
+import type { SeriesPlan, EpisodeOutline, PlotBomb } from '@/lib/types'
 
 interface PlanningMapProps {
   plan: SeriesPlan
   projectTitle: string
-}
-
-const NODE_COLORS: Record<string, string> = {
-  normal: 'bg-gray-100 text-gray-600 border-gray-200',
-  plot_bomb: 'bg-spark-100 text-spark-700 border-spark-300',
-  major_twist: 'bg-red-100 text-red-700 border-red-300',
-  emotional_peak: 'bg-pink-100 text-pink-700 border-pink-300',
-  comedy_peak: 'bg-yellow-100 text-yellow-700 border-yellow-300',
 }
 
 const NODE_LABELS: Record<string, string> = {
@@ -40,6 +32,46 @@ const ACT_COLORS = [
   'bg-green-50 border-green-200',
   'bg-purple-50 border-purple-200',
 ]
+
+const BOMB_TYPE_COLORS: Record<string, string> = {
+  betrayal: 'bg-red-100 text-red-700 border-red-200',
+  twist: 'bg-orange-100 text-orange-700 border-orange-200',
+  identity_reveal: 'bg-purple-100 text-purple-700 border-purple-200',
+  emotional_peak: 'bg-pink-100 text-pink-700 border-pink-200',
+}
+
+const BOMB_TYPE_LABELS: Record<string, string> = {
+  identity_reveal: '身份揭露',
+  betrayal: '背叛',
+  twist: '大反转',
+  emotional_peak: '情感高潮',
+}
+
+function getEpisodeStyle(ep: EpisodeOutline, _isBomb: boolean): string {
+  const { nodeType, emotionPeak } = ep
+  const peak = emotionPeak ?? 5
+
+  if (nodeType === 'major_twist') {
+    return 'bg-red-50 border-red-300 text-red-900'
+  }
+  if (nodeType === 'plot_bomb') {
+    return 'bg-orange-50 border-orange-300 text-orange-900'
+  }
+  if (nodeType === 'emotional_peak') {
+    return 'bg-pink-50 border-pink-300 text-pink-800'
+  }
+  if (nodeType === 'comedy_peak') {
+    return 'bg-yellow-50 border-yellow-300 text-yellow-800'
+  }
+  // normal node - color by emotionPeak
+  if (peak >= 8) {
+    return 'bg-purple-50 border-purple-300 text-purple-900'
+  }
+  if (peak >= 6) {
+    return 'bg-blue-50 border-blue-200 text-blue-800'
+  }
+  return 'bg-gray-50 border-gray-200 text-gray-700'
+}
 
 export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
   const router = useRouter()
@@ -227,20 +259,21 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-bold text-gray-700 mb-4">全剧爆点节点</h3>
           <div className="flex flex-col gap-3">
-            {plan.plotBombs.map((bomb, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-3">
-                <span className="text-base shrink-0">🔥</span>
-                <div>
-                  <span className="text-sm font-semibold text-red-700">第 {bomb.episodeNumber} 集</span>
-                  <span className="ml-2 text-xs text-red-500 rounded-full bg-red-100 px-2 py-0.5">
-                    {bomb.type === 'identity_reveal' ? '身份揭露' :
-                     bomb.type === 'betrayal' ? '背叛' :
-                     bomb.type === 'twist' ? '大反转' : '情感高潮'}
-                  </span>
-                  <p className="mt-1 text-xs text-red-700">{bomb.description}</p>
+            {plan.plotBombs.map((bomb: PlotBomb, i) => {
+              const bombColorClass = BOMB_TYPE_COLORS[bomb.type] || 'bg-red-50 border-red-100 text-red-700'
+              return (
+                <div key={i} className={`flex items-start gap-3 rounded-xl border p-3 ${bombColorClass}`}>
+                  <span className="text-base shrink-0">🔥</span>
+                  <div>
+                    <span className="text-sm font-semibold">第 {bomb.episodeNumber} 集</span>
+                    <span className={`ml-2 text-xs rounded-full px-2 py-0.5 border ${bombColorClass}`}>
+                      {BOMB_TYPE_LABELS[bomb.type] || bomb.type}
+                    </span>
+                    <p className="mt-1 text-xs">{bomb.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
@@ -248,11 +281,23 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
       {/* 分集梗概网格 */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="text-sm font-bold text-gray-700 mb-4">分集梗概总表</h3>
+        {/* 图例 */}
+        <div className="mb-3 flex flex-wrap gap-2 text-xs">
+          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300" />大反转</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-orange-100 border border-orange-300" />爆点</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-pink-100 border border-pink-300" />情感高潮</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-yellow-100 border border-yellow-300" />喜剧高潮</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-purple-100 border border-purple-300" />高燃(≥8)</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-blue-100 border border-blue-200" />起伏(≥6)</span>
+        </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 max-h-[600px] overflow-y-auto pr-1">
           {plan.episodes.map((ep: EpisodeOutline) => {
             const isHot = hotSet.has(ep.episodeNumber)
             const hasBomb = bombMap.has(ep.episodeNumber)
-            const nodeStyle = NODE_COLORS[ep.nodeType] || NODE_COLORS.normal
+            const nodeStyle = getEpisodeStyle(ep, hasBomb)
+            const peak = ep.emotionPeak ?? 5
+            // Compute bar width for emotionPeak visualization (0-10 scale → 0-100%)
+            const barWidth = `${peak * 10}%`
 
             return (
               <div
@@ -267,7 +312,17 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
                 </div>
                 <p className="text-xs font-semibold mb-1 leading-snug">{ep.title}</p>
                 <p className="text-xs opacity-80 leading-relaxed line-clamp-2">{ep.synopsis}</p>
-                <div className="mt-2 flex items-center gap-1">
+                {/* 情绪强度条 */}
+                <div className="mt-2 flex items-center gap-1.5">
+                  <div className="flex-1 h-1 rounded-full bg-black/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-current opacity-40 transition-all"
+                      style={{ width: barWidth }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium opacity-60 shrink-0">{peak}</span>
+                </div>
+                <div className="mt-1 flex items-center gap-1">
                   <span className="text-xs opacity-60">
                     {HOOK_LABELS[ep.hookType] || ep.hookType}
                   </span>

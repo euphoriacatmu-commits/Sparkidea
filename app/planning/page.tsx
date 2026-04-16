@@ -17,7 +17,7 @@ export default function PlanningPage() {
   const selectedCard = useProjectStore(s => s.selectedCard)
   const parsedOutline = useProjectStore(s => s.parsedOutline)
   const seriesPlan = useProjectStore(s => s.seriesPlan)
-  const { setSeriesPlan } = useProjectStore()
+  const { setSeriesPlan, saveCurrentProject } = useProjectStore()
   const { settings: modelSettings } = useModelConfigStore()
 
   useEffect(() => {
@@ -75,6 +75,7 @@ export default function PlanningPage() {
         }
 
         setSeriesPlan(data.plan)
+        saveCurrentProject()
         break
       } catch {
         retries--

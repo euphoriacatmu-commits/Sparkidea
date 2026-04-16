@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useProjectStore } from '@/store/project'
 import { useModelConfigStore } from '@/store/model-config'
 import QualityAlert from './QualityAlert'
+import { showToast } from './Toast'
 import type { Episode, EpisodeMetadata, HookType } from '@/lib/types'
 
 interface EpisodeEditorProps {
@@ -41,6 +42,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
   const [localContent, setLocalContent] = useState('')
   const [done, setDone] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [adoptedSuggestion, setAdoptedSuggestion] = useState<string | undefined>(undefined)
   const abortRef = useRef<AbortController | null>(null)
 
   const seriesPlan = useProjectStore(s => s.seriesPlan)
@@ -61,7 +63,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
   const previousEpisode = episodes[episodeNumber - 1]
   const previousHook = previousEpisode?.editorNotes?.nextEmotionDebt || null
 
-  const startGeneration = useCallback(async () => {
+  const startGeneration = useCallback(async (suggestion?: string) => {
     if (!config || !seriesPlan || !episodeOutline) return
     if (isGenerating) return
 
@@ -84,6 +86,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
           episodeOutline,
           previousHook,
           modelSettings,
+          adoptedSuggestion: suggestion,
         }),
         signal: abortRef.current.signal,
       })
@@ -198,6 +201,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
     a.download = `${config?.title || '剧本'}_第${episodeNumber}集.txt`
     a.click()
     URL.revokeObjectURL(url)
+    showToast('已导出 .txt 文件')
   }
 
   const handleExportDocx = async () => {
@@ -240,21 +244,118 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
       a.download = `${config?.title || '剧本'}_第${episodeNumber}集.docx`
       a.click()
       URL.revokeObjectURL(url)
+      showToast('已导出 .docx 文件')
     } catch (err) {
       console.error('导出 docx 失败:', err)
       alert('导出失败，请使用 TXT 格式')
     }
   }
 
-  const handleRegenerate = () => {
+  const handleExportMd = () => {
+    const content = existingEpisode?.script || localContent
+    if (!content) return
+    let md = `# ${config?.title || '剧本'} · 第${episodeNumber}集\n\n`
+    md += content
+      .replace(/^(内景|外景)(.+)/gm, '## $1$2')
+      .replace(/^(淡入|淡出)$/gm, '*$1*')
+      .replace(/^△$/gm, '---')
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${config?.title || '剧本'}_第${episodeNumber}集.md`
+    a.click()
+    URL.revokeObjectURL(url)
+    showToast('已导出 .md 文件')
+  }
+
+  const handleRegenerate = (suggestion?: string) => {
     setLocalContent('')
     setDone(false)
     setErrorMsg(null)
-    startGeneration()
+    showToast('正在重新生成…', 'info')
+    startGeneration(suggestion)
+  }
+
+  const handleAdoptSuggestion = (suggestion: string) => {
+    setAdoptedSuggestion(suggestion)
+    handleRegenerate(suggestion)
   }
 
   const displayContent = existingEpisode?.script || localContent
   const isShowingCached = !!existingEpisode && !isGenerating
+
+  // 渲染剧本正文区域（国际标准格式）
+  const renderScriptBody = (text: string) => {
+    const lines = text.split('\n')
+    return lines.map((line, idx) => {
+      const trimmed = line.trim()
+
+      // 场景头 内景/外景
+      if (/^(内景|外景)/.test(trimmed)) {
+        return (
+          <div key={idx} className="mt-4 mb-1 font-bold text-gray-900 border-b border-gray-300 pb-1 text-sm uppercase tracking-wide">
+            {trimmed}
+          </div>
+        )
+      }
+
+      // 淡入/淡出
+      if (/^(淡入|淡出)$/.test(trimmed)) {
+        return (
+          <div key={idx} className="text-right italic text-gray-500 text-xs my-2">
+            {trimmed}
+          </div>
+        )
+      }
+
+      // 场景切换 △
+      if (trimmed === '△') {
+        return (
+          <div key={idx} className="text-center text-gray-400 text-base my-2 select-none">
+            △
+          </div>
+        )
+      }
+
+      // 括号指示 （...）
+      if (/^（/.test(trimmed) && trimmed.endsWith('）')) {
+        return (
+          <div key={idx} className="pl-8 text-gray-400 text-xs italic leading-relaxed">
+            {trimmed}
+          </div>
+        )
+      }
+
+      // 角色名行：短行（≤12字）不含空格，后面可以跟 (OS)/(VO)/(CONT'D)
+      if (/^[^\s（\n【]{1,12}(\s+\((OS|VO|CONT'D)\))?$/.test(trimmed) && trimmed.length > 0) {
+        const osMatch = trimmed.match(/\((OS|VO)\)/)
+        return (
+          <div key={idx} className="mt-3 mb-0 font-bold text-gray-800 text-sm flex items-center gap-2">
+            <span>{trimmed.replace(/\s+\((OS|VO|CONT'D)\)/, '')}</span>
+            {osMatch && (
+              <span className={`text-xs rounded px-1 py-0.5 font-normal
+                ${osMatch[1] === 'OS' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                {osMatch[1]}
+              </span>
+            )}
+          </div>
+        )
+      }
+
+      // 空行
+      if (trimmed === '') {
+        return <div key={idx} className="h-2" />
+      }
+
+      // 普通动作/台词行
+      return (
+        <div key={idx} className="text-sm text-gray-800 leading-loose">
+          {line}
+        </div>
+      )
+    })
+  }
 
   // 渲染脚本内容（区分不同段落类型）
   const renderScript = (text: string) => {
@@ -279,11 +380,12 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
           </div>
         )
       } else if (section.startsWith('---剧本正文---')) {
+        const bodyText = section.replace('---剧本正文---', '').trim()
         return (
           <div key={i} className="mb-4">
             <h3 className="text-xs font-bold text-gray-500 uppercase mb-3">剧本正文</h3>
-            <div className="script-content text-sm text-gray-800 leading-loose whitespace-pre-wrap">
-              {section.replace('---剧本正文---', '').trim()}
+            <div className="script-content font-sans">
+              {renderScriptBody(bodyText)}
             </div>
           </div>
         )
@@ -316,7 +418,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
   return (
     <div className="flex flex-col h-full gap-4">
       {/* 质量警告 */}
-      <QualityAlert warnings={qualityWarnings} />
+      <QualityAlert warnings={qualityWarnings} onAdoptSuggestion={handleAdoptSuggestion} />
 
       {/* 集标题栏 */}
       <div className="flex items-start justify-between gap-4">
@@ -341,7 +443,13 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
               导出 .docx
             </button>
             <button
-              onClick={handleRegenerate}
+              onClick={handleExportMd}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+            >
+              导出 .md
+            </button>
+            <button
+              onClick={() => handleRegenerate(adoptedSuggestion)}
               className="rounded-lg border border-spark-200 bg-spark-50 px-3 py-1.5 text-xs font-medium text-spark-600 hover:bg-spark-100 transition"
             >
               重新生成
@@ -356,7 +464,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
           <span>❌</span>
           <span>{errorMsg}</span>
           <button
-            onClick={handleRegenerate}
+            onClick={() => handleRegenerate()}
             className="ml-auto text-red-500 underline"
           >
             重试

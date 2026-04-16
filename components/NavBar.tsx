@@ -55,8 +55,20 @@ export default function NavBar({ backHref, backLabel, step }: NavBarProps) {
             </div>
           )}
 
-          {/* 右侧：模型配置按钮 */}
+          {/* 右侧：项目频道 + 模型配置按钮 */}
           <div className="ml-auto flex items-center gap-2">
+            {/* 项目频道 */}
+            <button
+              onClick={() => router.push('/projects')}
+              className="hidden sm:flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs text-gray-500 hover:border-spark-300 hover:text-spark-600 transition"
+              title="项目频道"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+              </svg>
+              <span>项目</span>
+            </button>
+
             <button
               onClick={() => setShowConfig(true)}
               className="hidden sm:flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1 text-xs text-gray-500 hover:border-spark-300 hover:text-spark-600 transition"

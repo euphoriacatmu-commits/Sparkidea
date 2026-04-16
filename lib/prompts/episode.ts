@@ -70,7 +70,8 @@ export function buildEpisodePrompt(
   config: ProjectConfig,
   plan: SeriesPlan,
   episodeOutline: EpisodeOutline,
-  previousEpisodeHook: string | null
+  previousEpisodeHook: string | null,
+  adoptedSuggestion?: string
 ): string {
   const platform = PLATFORM_SPECS[config.platform]
   const targetWords = Math.round(getWordsPerMinute(config.dialogueDensity) * config.episodeDuration)
@@ -106,23 +107,38 @@ ${previousEpisodeHook ? `上集末尾钩子：${previousEpisodeHook}` : '（第�
 【节拍时间线】（严格按此结构写）
 ${beatTimings.map(b => `${b.range}：${b.function}`).join('\n')}
 
-【剧本输出格式】（严格遵守）
+【剧本输出格式】（严格遵守国际标准剧本格式）
+
 ---集前情报---
 上集情绪状态：[填写]
 本集情绪账：[填写]
 目标观众反应：[填写]
 
 ---节拍时间线---
-[按节拍简述每段核心内容，不写完整台词，只写功能性描述]
+[按节拍简述每段核心内容]
 
 ---剧本正文---
-【场景X：场景名称 · 时间 · 地点】
+
+淡入
+
+内景/外景 场景名称 - 时间（白天/夜晚/黄昏/清晨）
 ${config.visualStylePrompt ? `（画面提示词：基于「${config.visualStylePrompt}」风格）` : ''}
+场景动作描述（简洁，≤50字）
 
-人物名：「台词内容」
-（动作/表情/镜头指示）
+角色名
+（括号内是动作/情绪/镜头指示）
+台词内容
 
-[依此格式继续...]
+角色名 (OS)
+（不在画面中，画外音）
+台词内容
+
+旁白 (VO)
+旁白内容
+
+△
+
+淡出
 
 ---编剧备注---
 本集埋设线索：[列出]
@@ -132,7 +148,14 @@ ${config.visualStylePrompt ? `（画面提示词：基于「${config.visualStyle
 反转计数：本集共X个反转
 实际台词占比：约X%
 
----
+【格式说明】
+- 内景=INT.室内场景  外景=EXT.室外场景
+- 时间：白天/夜晚/黄昏/清晨/凌晨
+- (OS) = 画外音（角色不在画面中）
+- (VO) = 旁白（叙事/内心独白）
+- △ = 场景切换（用于快速剪辑）
+- 淡入/淡出 = FADE IN/FADE OUT（集首尾）
+- (CONT'D) = 同一角色连续对话
 
 【强制写作规则】
 1. 台词：口语化短句，≤20字/句优先，带梗，有记忆点，禁止文绉绉
@@ -142,5 +165,5 @@ ${config.visualStylePrompt ? `（画面提示词：基于「${config.visualStyle
 5. 反差萌：至少一处角色表面人设与实际行为的最大落差
 6. 梗植入：${getMemeGuide(config.memeIntensity)}
 7. 禁止：哲学独白、文学性描写、完美无缺的主角行为
-8. 场景描述字数限制：${getDensityRatio(config.dialogueDensity) === '≥80%' ? '≤30字/场景' : getDensityRatio(config.dialogueDensity) === '≥65%' ? '≤60字/场景' : '≤120字/场景'}`
+8. 场景描述字数限制：${getDensityRatio(config.dialogueDensity) === '≥80%' ? '≤30字/场景' : getDensityRatio(config.dialogueDensity) === '≥65%' ? '≤60字/场景' : '≤120字/场景'}${adoptedSuggestion ? `\n\n【编剧优化指令】上一版本存在问题：${adoptedSuggestion}。请在本次重写中重点修正这个问题。` : ''}`
 }

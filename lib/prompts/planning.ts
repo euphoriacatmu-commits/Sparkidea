@@ -66,6 +66,13 @@ export function buildPlanningPrompt(config: ProjectConfig, ideation: IdeationCar
   ]
 }
 
+【爆点节奏规则 - 多巴胺分布】（优先级高于其他规则）
+- 每3集至少1个"小爆点"：nodeType=emotional_peak 或 comedy_peak（给情绪价值）
+- 每5集至少1个"中爆点"：nodeType=plot_bomb（剧情反转）
+- 每10集至少1个"大爆点"：nodeType=major_twist（震三观）
+- 大爆点集同时须在plotBombs中记录
+- "normal"类节点在全集中占比不超过30%，漫剧靠情绪价值留住观众！
+
 【规则】
 1. acts=5幕:建立(前20%)/激化(20-40%)/黑暗(40-55%)/反转(55-80%)/余震(80-100%)
 2. 前3集nodeType必须是plot_bomb或major_twist
