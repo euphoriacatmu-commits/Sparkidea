@@ -35,11 +35,15 @@ export default function NavBar({ backHref, backLabel, step }: NavBarProps) {
             </button>
           )}
 
-          {/* Logo */}
-          <div className="flex items-center gap-2">
+          {/* Logo — 点击返回首页 */}
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 hover:opacity-75 transition-opacity"
+            title="返回首页"
+          >
             <span className="text-xl">🔥</span>
             <span className="font-bold text-gray-900 hidden sm:inline">火花剧本</span>
-          </div>
+          </button>
 
           {/* 步骤进度条 */}
           {step && (

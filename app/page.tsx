@@ -79,11 +79,14 @@ export default function HomePage() {
       {/* 导航栏 */}
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 hover:opacity-75 transition-opacity"
+          >
             <span className="text-xl">🔥</span>
             <span className="font-bold text-gray-900">火花剧本</span>
             <span className="text-xs text-gray-400 hidden sm:inline">AI漫剧/短剧爆款剧本生成器</span>
-          </div>
+          </button>
           <div className="flex items-center gap-3">
             {/* 当前模型提供商标识 */}
             <button
@@ -186,10 +189,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* 底部 */}
-      <footer className="py-6 text-center text-xs text-gray-400">
-        <p>火花剧本 · 由 Claude Anthropic 驱动</p>
-      </footer>
     </div>
   )
 }

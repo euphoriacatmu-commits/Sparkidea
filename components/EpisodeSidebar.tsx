@@ -40,9 +40,11 @@ export default function EpisodeSidebar({ currentEpisode }: EpisodeSidebarProps) 
 
   const episodes = seriesPlan.episodes
   const hotEpisodes = new Set(seriesPlan.hotEpisodes || [])
-  const warningEpisodes = new Set(
-    qualityWarnings.flatMap(() => [] as number[])
-  )
+  // 有质量警告时，在最近一集生成的集数上标红点
+  const lastGenerated = generatedEpisodeNumbers.length > 0
+    ? Math.max(...generatedEpisodeNumbers)
+    : -1
+  const hasAnyWarnings = qualityWarnings.length > 0
 
   const navigateTo = (n: number) => {
     router.push(`/episode/${n}`)
@@ -61,7 +63,7 @@ export default function EpisodeSidebar({ currentEpisode }: EpisodeSidebarProps) 
           const isStreaming = streamingEpisodeNumber === ep.episodeNumber
           const isCurrent = currentEpisode === ep.episodeNumber
           const isHot = hotEpisodes.has(ep.episodeNumber)
-          const hasWarning = warningEpisodes.has(ep.episodeNumber)
+          const hasWarning = hasAnyWarnings && ep.episodeNumber === lastGenerated
           const nodeColor = NODE_TYPE_COLORS[ep.nodeType] || 'bg-gray-300'
           const nodeEmoji = NODE_TYPE_LABELS[ep.nodeType] || ''
 

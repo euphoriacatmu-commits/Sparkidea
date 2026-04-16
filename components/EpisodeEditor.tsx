@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useProjectStore } from '@/store/project'
 import { useModelConfigStore } from '@/store/model-config'
 import QualityAlert from './QualityAlert'
@@ -65,6 +66,7 @@ function parseScriptMetadata(script: string, hookType: HookType): EpisodeMetadat
 }
 
 export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
+  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [localContent, setLocalContent] = useState('')
@@ -275,7 +277,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
       showToast('已导出 .docx 文件')
     } catch (err) {
       console.error('导出 docx 失败:', err)
-      alert('导出失败，请使用 TXT 格式')
+      showToast('导出失败，请使用 TXT 格式', 'error')
     }
   }
 
@@ -528,7 +530,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
       {(done || isShowingCached) && (
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <button
-            onClick={() => episodeNumber > 1 && (window.location.href = `/episode/${episodeNumber - 1}`)}
+            onClick={() => router.push(`/episode/${episodeNumber - 1}`)}
             disabled={episodeNumber <= 1}
             className="text-sm text-gray-400 hover:text-gray-600 disabled:opacity-30 transition"
           >
@@ -538,10 +540,7 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
             {episodeNumber} / {seriesPlan?.episodes.length || '?'}
           </span>
           <button
-            onClick={() => {
-              const total = seriesPlan?.episodes.length || 0
-              if (episodeNumber < total) window.location.href = `/episode/${episodeNumber + 1}`
-            }}
+            onClick={() => router.push(`/episode/${episodeNumber + 1}`)}
             disabled={episodeNumber >= (seriesPlan?.episodes.length || 0)}
             className="text-sm text-spark-600 hover:text-spark-700 font-medium disabled:opacity-30 transition"
           >
