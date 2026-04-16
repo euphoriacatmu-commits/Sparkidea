@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import ToastContainer from '@/components/Toast'
 import Footer from '@/components/Footer'
+import AuthProvider from '@/components/AuthProvider'
 
 export const metadata: Metadata = {
   title: '火花剧本 - AI短剧创作助手',
@@ -16,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased min-h-screen bg-gray-50 flex flex-col">
-        <div className="flex-1 flex flex-col">
-          {children}
-        </div>
+        <AuthProvider>
+          <div className="flex-1 flex flex-col">
+            {children}
+          </div>
+        </AuthProvider>
         <Footer />
         <ToastContainer />
       </body>

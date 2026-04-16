@@ -131,7 +131,7 @@ export function checkQualityFromOutlines(
           type: 'no_twist',
           severity: 'error',
           message: `第 ${ep.episodeNumber - 2} 集起连续 ${noCliffStreak} 集为普通推进节点，缺少高潮`,
-          suggestion: '建议在此处安排爆点集（plot_bomb）或大反转集（major_twist）',
+          suggestion: '建议在此处安排爆点集或大反转集，提高情节密度',
         })
         noCliffStreak = 0
       }

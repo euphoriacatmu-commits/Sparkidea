@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProjectStore } from '@/store/project'
 import type { SeriesPlan, EpisodeOutline, PlotBomb } from '@/lib/types'
@@ -69,6 +70,7 @@ function getEpisodeStyle(ep: EpisodeOutline): string {
 export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
   const router = useRouter()
   const config = useProjectStore(s => s.config)
+  const [showEpisodeGrid, setShowEpisodeGrid] = useState(false)
   const hotSet = new Set(plan.hotEpisodes || [])
   const bombMap = new Map(plan.plotBombs?.map(b => [b.episodeNumber, b]) || [])
 
@@ -318,11 +320,26 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
 
       {/* 分集梗概总表 */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-sm font-bold text-gray-700 mb-4">分集梗概总表</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-gray-700">分集梗概总表</h3>
+          {hasEpisodes && (
+            <button
+              onClick={() => setShowEpisodeGrid(v => !v)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600 transition flex items-center gap-1.5"
+            >
+              {showEpisodeGrid ? '▲ 收起' : '▼ 展开分集梗概'}
+              <span className="text-gray-400">（{plan.episodes.length} 集）</span>
+            </button>
+          )}
+        </div>
 
         {!hasEpisodes ? (
           <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-3 text-center">
             分集规划未生成，请点击上方「重新规划」按钮重新生成
+          </p>
+        ) : !showEpisodeGrid ? (
+          <p className="text-sm text-gray-400 text-center py-2">
+            点击「展开分集梗概」查看全部 {plan.episodes.length} 集详情
           </p>
         ) : (
           <>

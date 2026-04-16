@@ -459,28 +459,30 @@ export default function EpisodeEditor({ episodeNumber }: EpisodeEditorProps) {
           <p className="mt-1 text-sm text-gray-500">{episodeOutline.synopsis}</p>
         </div>
         {(isShowingCached || done) && (
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
+            <span className="text-xs text-gray-400 mr-1">导出：</span>
             <button
               onClick={handleExportTxt}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition"
             >
-              导出 .txt
+              .txt
             </button>
             <button
               onClick={handleExportDocx}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition"
             >
-              导出 .docx
+              .docx
             </button>
             <button
               onClick={handleExportMd}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition"
             >
-              导出 .md
+              .md
             </button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
             <button
               onClick={() => handleRegenerate(adoptedSuggestion)}
-              className="rounded-lg border border-spark-200 bg-spark-50 px-3 py-1.5 text-xs font-medium text-spark-600 hover:bg-spark-100 transition"
+              className="rounded-lg border border-spark-200 bg-orange-50 px-3 py-1.5 text-xs font-medium text-spark-600 hover:bg-orange-100 transition"
             >
               重新生成
             </button>
