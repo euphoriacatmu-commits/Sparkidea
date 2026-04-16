@@ -33,11 +33,12 @@ const ACT_COLORS = [
   'bg-purple-50 border-purple-200',
 ]
 
-const BOMB_TYPE_COLORS: Record<string, string> = {
-  betrayal: 'bg-red-100 text-red-700 border-red-200',
-  twist: 'bg-orange-100 text-orange-700 border-orange-200',
-  identity_reveal: 'bg-purple-100 text-purple-700 border-purple-200',
-  emotional_peak: 'bg-pink-100 text-pink-700 border-pink-200',
+// 爆点列表卡片配色（高对比度，每种类型明显不同）
+const BOMB_CARD_STYLES: Record<string, { card: string; badge: string }> = {
+  betrayal:        { card: 'bg-red-100 border-l-4 border-l-red-500 text-red-900',         badge: 'bg-red-500 text-white' },
+  twist:           { card: 'bg-amber-100 border-l-4 border-l-amber-500 text-amber-900',   badge: 'bg-amber-500 text-white' },
+  identity_reveal: { card: 'bg-violet-100 border-l-4 border-l-violet-500 text-violet-900', badge: 'bg-violet-500 text-white' },
+  emotional_peak:  { card: 'bg-rose-100 border-l-4 border-l-rose-500 text-rose-900',      badge: 'bg-rose-500 text-white' },
 }
 
 const BOMB_TYPE_LABELS: Record<string, string> = {
@@ -47,30 +48,21 @@ const BOMB_TYPE_LABELS: Record<string, string> = {
   emotional_peak: '情感高潮',
 }
 
+// 分集梗概卡片配色：8种明显不同的颜色，底色+深色文字保证对比度
 function getEpisodeStyle(ep: EpisodeOutline, _isBomb: boolean): string {
   const { nodeType, emotionPeak } = ep
   const peak = emotionPeak ?? 5
 
-  if (nodeType === 'major_twist') {
-    return 'bg-red-50 border-red-300 text-red-900'
-  }
-  if (nodeType === 'plot_bomb') {
-    return 'bg-orange-50 border-orange-300 text-orange-900'
-  }
-  if (nodeType === 'emotional_peak') {
-    return 'bg-pink-50 border-pink-300 text-pink-800'
-  }
-  if (nodeType === 'comedy_peak') {
-    return 'bg-yellow-50 border-yellow-300 text-yellow-800'
-  }
-  // normal node - color by emotionPeak
-  if (peak >= 8) {
-    return 'bg-purple-50 border-purple-300 text-purple-900'
-  }
-  if (peak >= 6) {
-    return 'bg-blue-50 border-blue-200 text-blue-800'
-  }
-  return 'bg-gray-50 border-gray-200 text-gray-700'
+  if (nodeType === 'major_twist')   return 'bg-red-100 border-red-400 text-red-900'
+  if (nodeType === 'plot_bomb')     return 'bg-amber-100 border-amber-400 text-amber-900'
+  if (nodeType === 'emotional_peak') return 'bg-rose-100 border-rose-400 text-rose-900'
+  if (nodeType === 'comedy_peak')   return 'bg-lime-100 border-lime-400 text-lime-900'
+
+  // normal — 按情绪峰值细分4个色阶
+  if (peak >= 8) return 'bg-violet-100 border-violet-400 text-violet-900'
+  if (peak >= 6) return 'bg-teal-100 border-teal-400 text-teal-900'
+  if (peak >= 4) return 'bg-sky-100 border-sky-300 text-sky-900'
+  return           'bg-slate-100 border-slate-300 text-slate-700'
 }
 
 export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
@@ -260,16 +252,18 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
           <h3 className="text-sm font-bold text-gray-700 mb-4">全剧爆点节点</h3>
           <div className="flex flex-col gap-3">
             {plan.plotBombs.map((bomb: PlotBomb, i) => {
-              const bombColorClass = BOMB_TYPE_COLORS[bomb.type] || 'bg-red-50 border-red-100 text-red-700'
+              const style = BOMB_CARD_STYLES[bomb.type] || { card: 'bg-red-100 border-l-4 border-l-red-500 text-red-900', badge: 'bg-red-500 text-white' }
               return (
-                <div key={i} className={`flex items-start gap-3 rounded-xl border p-3 ${bombColorClass}`}>
-                  <span className="text-base shrink-0">🔥</span>
-                  <div>
-                    <span className="text-sm font-semibold">第 {bomb.episodeNumber} 集</span>
-                    <span className={`ml-2 text-xs rounded-full px-2 py-0.5 border ${bombColorClass}`}>
-                      {BOMB_TYPE_LABELS[bomb.type] || bomb.type}
-                    </span>
-                    <p className="mt-1 text-xs">{bomb.description}</p>
+                <div key={i} className={`flex items-start gap-3 rounded-xl border p-3 pl-4 ${style.card}`}>
+                  <span className="text-base shrink-0 mt-0.5">🔥</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold">第 {bomb.episodeNumber} 集</span>
+                      <span className={`text-xs rounded-full px-2.5 py-0.5 font-semibold ${style.badge}`}>
+                        {BOMB_TYPE_LABELS[bomb.type] || bomb.type}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs font-medium leading-relaxed">{bomb.description}</p>
                   </div>
                 </div>
               )
@@ -282,13 +276,22 @@ export default function PlanningMap({ plan, projectTitle }: PlanningMapProps) {
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="text-sm font-bold text-gray-700 mb-4">分集梗概总表</h3>
         {/* 图例 */}
-        <div className="mb-3 flex flex-wrap gap-2 text-xs">
-          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300" />大反转</span>
-          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-orange-100 border border-orange-300" />爆点</span>
-          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-pink-100 border border-pink-300" />情感高潮</span>
-          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-yellow-100 border border-yellow-300" />喜剧高潮</span>
-          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-purple-100 border border-purple-300" />高燃(≥8)</span>
-          <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-blue-100 border border-blue-200" />起伏(≥6)</span>
+        <div className="mb-4 flex flex-wrap gap-2 text-xs">
+          {[
+            { bg: 'bg-red-100 border-red-400',    label: '🔥 大反转' },
+            { bg: 'bg-amber-100 border-amber-400', label: '💥 爆点' },
+            { bg: 'bg-rose-100 border-rose-400',   label: '💔 情感高潮' },
+            { bg: 'bg-lime-100 border-lime-400',   label: '😂 喜剧高潮' },
+            { bg: 'bg-violet-100 border-violet-400', label: '⚡ 高燃≥8' },
+            { bg: 'bg-teal-100 border-teal-400',   label: '💧 起伏≥6' },
+            { bg: 'bg-sky-100 border-sky-300',     label: '🌤 推进≥4' },
+            { bg: 'bg-slate-100 border-slate-300', label: '·· 铺垫' },
+          ].map(item => (
+            <span key={item.label} className="flex items-center gap-1 text-gray-600">
+              <span className={`inline-block w-3.5 h-3.5 rounded border ${item.bg}`} />
+              {item.label}
+            </span>
+          ))}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 max-h-[600px] overflow-y-auto pr-1">
           {plan.episodes.map((ep: EpisodeOutline) => {
