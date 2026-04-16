@@ -13,7 +13,7 @@ export interface PlatformSpec {
 export const PLATFORM_SPECS: Record<Platform, PlatformSpec> = {
   hongguo: {
     name: '红果漫剧',
-    spec: '横屏16:9，单集≤3分钟，首帧必须有视觉冲击，强钩子优先',
+    spec: '单集≤3分钟，首帧必须有视觉冲击，强钩子优先',
     dialogueNote: '对话简短有力，字幕友好，单句≤15字为佳',
     sceneNote: '场景切换频率高，每30秒至少换一个情绪节点',
     visualHint: '竖屏构图，人物居中，表情特写多',
@@ -22,7 +22,7 @@ export const PLATFORM_SPECS: Record<Platform, PlatformSpec> = {
   },
   douyin: {
     name: '抖音短剧',
-    spec: '竖屏9:16，单集30秒-3分钟，前3秒决定生死，完播率优先',
+    spec: '单集30秒-3分钟，前3秒决定生死，完播率优先',
     dialogueNote: '台词即字幕，超短句，观众不看画面只看字也能懂剧情',
     sceneNote: '低切换成本，室内场景为主，降低制作门槛',
     visualHint: '近景/特写为主，表情变化是叙事核心',

@@ -40,84 +40,40 @@ const AUDIENCE_LABELS: Record<string, string> = {
 
 export function buildPlanningPrompt(config: ProjectConfig, ideation: IdeationCard): string {
   const platform = PLATFORM_SPECS[config.platform]
-  const wordsPerEpisode = getWordsPerMinute(config.dialogueDensity) * config.episodeDuration
+  const wordsPerEpisode = Math.round(getWordsPerMinute(config.dialogueDensity) * config.episodeDuration)
   const genreNames = config.genres.map(g => GENRE_LABELS[g] || g).join('/')
   const audienceNames = config.targetAudience.map(a => AUDIENCE_LABELS[a] || a).join('、')
+  const aspectRatioText = (config as { aspectRatio?: string }).aspectRatio || '9:16'
 
-  return `你是AI漫剧结构设计专家。根据以下项目参数，生成完整的全集规划。
+  return `你是AI漫剧结构设计专家。根据以下项目参数，生成完整的全集规划JSON。
 
-【项目信息】
-- 剧名：${config.title || ideation.title}
-- 故事核心：${ideation.logline}
-- 总集数：${config.totalEpisodes} 集
-- 每集时长：${config.episodeDuration} 分钟
-- 每集约 ${wordsPerEpisode} 字（含台词+场景描述）
-- 剧本类型：${genreNames}
-- 节奏风格：${PACE_LABELS[config.paceStyle]}
-- 台词密度：${config.dialogueDensity}（台词占比约${getDensityRatio(config.dialogueDensity)}）
-- 目标平台：${platform.name}（${platform.spec}）
-- 梗文化强度：${config.memeIntensity}/5
-- 受众：${audienceNames}
+【项目】剧名:${config.title||ideation.title} | 总集数:${config.totalEpisodes}集 | 每集:${config.episodeDuration}分钟/${wordsPerEpisode}字 | 比例:${aspectRatioText}
+【类型】${genreNames} | 节奏:${PACE_LABELS[config.paceStyle]} | 台词:${getDensityRatio(config.dialogueDensity)} | 梗度:${config.memeIntensity}/5
+【平台】${platform.name}(${platform.spec}) | 受众:${audienceNames}
+【故事】${ideation.logline}
+【情感】核心:${ideation.coreEmotion} | 流量底座:${ideation.trafficBase} | 钩子:${ideation.hook}
 
-【核心情感】${ideation.coreEmotion}
-【流量底座】${ideation.trafficBase}
-【时代情绪】${ideation.eraEmotion}
-【核心钩子】${ideation.hook}
-
-请输出完整的全集规划 JSON，不要输出任何其他内容，严格按照以下结构：
+严格只输出JSON对象，不含任何其他文字，结构如下：
 
 {
   "projectId": "proj_${Date.now()}",
-  "acts": [
-    {
-      "name": "幕名称（建立/激化/最黑暗时刻/反转/余震）",
-      "episodeRange": [起始集数, 结束集数],
-      "emotionTarget": "本幕情绪目标（≤30字）"
-    }
-  ],
-  "characters": [
-    {
-      "name": "角色名",
-      "role": "protagonist 或 antagonist 或 supporting",
-      "archetype": "人设标签（≤10字）",
-      "flaw": "人性劣根性（必填，≤20字）",
-      "arc": "成长弧（≤30字）",
-      "signatureLine": "标志性台词（≤20字）"
-    }
-  ],
-  "plotBombs": [
-    {
-      "episodeNumber": 集数,
-      "type": "identity_reveal 或 betrayal 或 twist 或 emotional_peak",
-      "description": "反转描述（≤50字）"
-    }
-  ],
-  "hotEpisodes": [集数数组，3-5个预测爆款集],
+  "acts": [{"name":"幕名","episodeRange":[1,N],"emotionTarget":"≤20字"}],
+  "characters": [{"name":"名","role":"protagonist|antagonist|supporting","archetype":"≤8字","flaw":"≤15字","arc":"≤20字","signatureLine":"≤15字"}],
+  "plotBombs": [{"episodeNumber":N,"type":"identity_reveal|betrayal|twist|emotional_peak","description":"≤30字"}],
+  "hotEpisodes": [N,N,N,N],
   "episodes": [
-    {
-      "episodeNumber": 1,
-      "title": "第一集标题",
-      "synopsis": "2-3行梗概（≤100字）",
-      "hookType": "emotion_unresolved 或 info_bomb 或 identity_question 或 cp_tension 或 moral_dilemma 或 cliffhanger",
-      "emotionTarget": "本集情绪目标（≤20字）",
-      "nodeType": "normal 或 plot_bomb 或 major_twist 或 emotional_peak 或 comedy_peak",
-      "emotionPeak": 1到10的整数
-    }
+    {"episodeNumber":1,"title":"标题","synopsis":"≤30字","hookType":"emotion_unresolved|info_bomb|identity_question|cp_tension|moral_dilemma|cliffhanger","emotionTarget":"≤15字","nodeType":"normal|plot_bomb|major_twist|emotional_peak|comedy_peak","emotionPeak":1-10}
   ]
 }
 
-【爆款结构规则】（必须遵守）
-1. acts 必须是5幕结构：建立（前20%集）、激化（20-40%）、最黑暗时刻（40-55%）、反转（55-80%）、余震（80-100%）
-2. 前3集：高密度入场，每集必须有反转（nodeType为 plot_bomb 或 major_twist）
-3. 每10集：至少1个 plotBombs 爆点（identity_reveal/betrayal/major_twist之一）
-4. 总集数30%处：第一个剧情低谷（emotionPeak最低点）
-5. 总集数60%处：主角真正觉醒（nodeType=major_twist，emotionPeak≥8）
-6. 最后5集：情绪总爆发，emotionPeak全部≥8
-7. 结尾集：预留续集口（nodeType=cliffhanger 或 major_twist）
-8. hotEpisodes 标注第1集、约30%处、约60%处、倒数第2集
-9. hookType 不能连续3集相同
-10. emotionPeak 形成波浪曲线，不能连续3集相同值
-11. episodes 数组必须包含全部 ${config.totalEpisodes} 集
+【规则】
+1. acts=5幕:建立(前20%)/激化(20-40%)/黑暗(40-55%)/反转(55-80%)/余震(80-100%)
+2. 前3集nodeType必须是plot_bomb或major_twist
+3. 每10集至少1个plotBombs爆点
+4. 30%集处emotionPeak最低; 60%集处major_twist且peak≥8; 末5集peak全≥8
+5. hookType不连续3集相同; emotionPeak波浪曲线不连续3集同值
+6. episodes必须包含全部${config.totalEpisodes}集，episodeNumber从1到${config.totalEpisodes}连续
+7. synopsis严格≤30字，节省token
 
-只输出JSON，不输出任何其他文字。`
+只输出JSON。`
 }

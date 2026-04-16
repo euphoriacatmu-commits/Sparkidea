@@ -65,10 +65,8 @@ export default function IdeationCards({ cards, onSelect }: IdeationCardsProps) {
               )}
             </div>
 
-            {/* 展开详情（悬停或选中时显示） */}
-            <div className={`flex flex-col gap-2 border-t border-gray-100 pt-3 transition-all
-              ${isSelected ? 'block' : 'hidden group-hover:block'}
-            `}>
+            {/* 展开详情（默认展开） */}
+            <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
               {card.hook && (
                 <div>
                   <span className="text-xs font-semibold text-gray-400 uppercase">核心钩子</span>

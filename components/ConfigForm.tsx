@@ -57,12 +57,12 @@ const MEME_LABELS = ['', '几乎无梗', '偶尔有梗', '适量网络感', '高
 
 export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps) {
   const defaultPlatform: Platform = (initialValues?.platform as Platform) || 'douyin'
-  const preset = PLATFORM_SPECS[defaultPlatform]
 
   const [form, setForm] = useState<ProjectConfig>({
     title: initialValues?.title || '',
-    totalEpisodes: initialValues?.totalEpisodes || preset.defaultTotalEpisodes,
-    episodeDuration: initialValues?.episodeDuration || preset.defaultEpisodeDuration,
+    totalEpisodes: initialValues?.totalEpisodes || 60,
+    episodeDuration: initialValues?.episodeDuration || 1.5,
+    aspectRatio: initialValues?.aspectRatio || '9:16',
     genres: initialValues?.genres || [],
     paceStyle: initialValues?.paceStyle || 'fast',
     targetAudience: initialValues?.targetAudience || ['f18-24'],
@@ -74,14 +74,9 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
 
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectConfig, string>>>({})
 
+  // 切换平台只更新平台字段，不覆盖用户已设定的集数和时长
   const updatePlatform = (platform: Platform) => {
-    const p = PLATFORM_SPECS[platform]
-    setForm(prev => ({
-      ...prev,
-      platform,
-      totalEpisodes: p.defaultTotalEpisodes,
-      episodeDuration: p.defaultEpisodeDuration,
-    }))
+    setForm(prev => ({ ...prev, platform }))
   }
 
   const toggleGenre = (genre: Genre) => {
@@ -110,7 +105,7 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
     const newErrors: Partial<Record<keyof ProjectConfig, string>> = {}
     if (!form.title.trim()) newErrors.title = '请填写剧名'
     if (form.totalEpisodes < 1) newErrors.totalEpisodes = '集数至少为 1'
-    if (form.episodeDuration < 1) newErrors.episodeDuration = '时长至少为 1 分钟'
+    if (form.episodeDuration < 0.5) newErrors.episodeDuration = '时长至少为 0.5 分钟（30秒）'
     if (form.genres.length === 0) newErrors.genres = '请至少选择一个类型'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -147,20 +142,53 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
             <input
               type="number"
               min={1}
+              step={1}
               value={form.totalEpisodes}
               onChange={e => setForm(prev => ({ ...prev, totalEpisodes: Math.max(1, parseInt(e.target.value) || 1) }))}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-spark-400 focus:outline-none focus:ring-2 focus:ring-spark-100"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">每集时长（分钟）*</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              每集时长（分钟）*
+              <span className="ml-1 text-xs font-normal text-gray-400">支持 0.5 步进，如 1.5 = 90秒</span>
+            </label>
             <input
               type="number"
-              min={1}
+              min={0.5}
+              step={0.5}
               value={form.episodeDuration}
-              onChange={e => setForm(prev => ({ ...prev, episodeDuration: Math.max(1, parseInt(e.target.value) || 1) }))}
+              onChange={e => setForm(prev => ({ ...prev, episodeDuration: Math.max(0.5, parseFloat(e.target.value) || 0.5) }))}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-spark-400 focus:outline-none focus:ring-2 focus:ring-spark-100"
             />
+            {errors.episodeDuration && <p className="mt-1 text-xs text-red-500">{errors.episodeDuration}</p>}
+          </div>
+        </div>
+
+        {/* 画面比例 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">画面比例 *</label>
+          <div className="flex gap-3">
+            {([
+              { value: '9:16', label: '竖屏 9:16', desc: '短剧/短视频标准', icon: '📱' },
+              { value: '16:9', label: '横屏 16:9', desc: '漫剧/横屏格式', icon: '🖥️' },
+            ] as const).map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, aspectRatio: opt.value }))}
+                className={`flex-1 flex flex-col items-center gap-1 rounded-xl border py-3 px-2 text-sm transition
+                  ${form.aspectRatio === opt.value
+                    ? 'border-spark-400 bg-spark-50 text-spark-700'
+                    : 'border-gray-200 text-gray-600 hover:border-spark-200'
+                  }
+                `}
+              >
+                <span className="text-xl">{opt.icon}</span>
+                <span className="font-semibold">{opt.label}</span>
+                <span className="text-xs text-gray-400">{opt.desc}</span>
+              </button>
+            ))}
           </div>
         </div>
       </section>

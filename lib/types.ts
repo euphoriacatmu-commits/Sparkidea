@@ -37,7 +37,8 @@ export type Audience = 'f18-24' | 'f25-35' | 'm18-30' | 'all-age'
 export interface ProjectConfig {
   title: string
   totalEpisodes: number
-  episodeDuration: number
+  episodeDuration: number   // 支持小数，如 1.5 表示 1.5 分钟（90秒）
+  aspectRatio: '16:9' | '9:16'
   genres: Genre[]
   paceStyle: PaceStyle
   targetAudience: Audience[]
