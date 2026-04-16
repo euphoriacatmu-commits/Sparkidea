@@ -85,7 +85,7 @@ export function buildEpisodePrompt(
 
 【全剧设定概要】
 剧名：${config.title}
-类型：${config.genres.join('/')}
+类型：${config.genres.join('/')}${config.coreConflict ? `\n核心冲突：${config.coreConflict}` : ''}${config.worldBuilding ? `\n世界观：${config.worldBuilding}` : ''}
 主角：${protagonists.map(c => `${c.name}（${c.archetype}，劣根性：${c.flaw}）`).join('、') || '待定'}
 反派：${antagonists.map(c => `${c.name}（${c.archetype}，合理性：${c.flaw}）`).join('、') || '无'}
 

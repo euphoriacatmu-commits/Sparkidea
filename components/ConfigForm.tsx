@@ -70,6 +70,8 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
     dialogueDensity: initialValues?.dialogueDensity || 'high',
     platform: defaultPlatform,
     visualStylePrompt: initialValues?.visualStylePrompt || '',
+    coreConflict: initialValues?.coreConflict || '',
+    worldBuilding: initialValues?.worldBuilding || '',
   })
 
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectConfig, string>>>({})
@@ -190,6 +192,42 @@ export default function ConfigForm({ initialValues, onSubmit }: ConfigFormProps)
               </button>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* 核心剧本设定 */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-base font-bold text-gray-800">
+          核心剧本设定
+          <span className="ml-2 text-sm font-normal text-gray-400">（选填，填写后 AI 规划更精准）</span>
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            核心冲突
+            <span className="ml-1 text-xs font-normal text-gray-400">一句话描述全剧最根本的对立与张力</span>
+          </label>
+          <textarea
+            rows={2}
+            value={form.coreConflict || ''}
+            onChange={e => setForm(prev => ({ ...prev, coreConflict: e.target.value }))}
+            placeholder="例：穷小子与豪门家族之间横跨三代的阶层战争，表面是爱情，底层是尊严"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-spark-400 focus:outline-none focus:ring-2 focus:ring-spark-100 resize-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            世界观设定
+            <span className="ml-1 text-xs font-normal text-gray-400">故事背景、特殊规则与独特设定</span>
+          </label>
+          <textarea
+            rows={3}
+            value={form.worldBuilding || ''}
+            onChange={e => setForm(prev => ({ ...prev, worldBuilding: e.target.value }))}
+            placeholder="例：近未来都市，AI取代大量白领工作，人类分化为「创意阶层」与「执行阶层」，主角是最后一批手写剧本的编剧…"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-spark-400 focus:outline-none focus:ring-2 focus:ring-spark-100 resize-none"
+          />
         </div>
       </section>
 

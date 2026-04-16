@@ -45,6 +45,11 @@ export function buildPlanningPrompt(config: ProjectConfig, ideation: IdeationCar
   const audienceNames = config.targetAudience.map(a => AUDIENCE_LABELS[a] || a).join('、')
   const aspectRatioText = (config as { aspectRatio?: string }).aspectRatio || '9:16'
 
+  const coreConflictLine = config.coreConflict?.trim()
+    ? `【核心冲突】${config.coreConflict.trim()}\n` : ''
+  const worldBuildingLine = config.worldBuilding?.trim()
+    ? `【世界观】${config.worldBuilding.trim()}\n` : ''
+
   return `你是AI漫剧结构设计专家。根据以下项目参数，生成完整的全集规划JSON。
 
 【项目】剧名:${config.title||ideation.title} | 总集数:${config.totalEpisodes}集 | 每集:${config.episodeDuration}分钟/${wordsPerEpisode}字 | 比例:${aspectRatioText}
@@ -52,13 +57,13 @@ export function buildPlanningPrompt(config: ProjectConfig, ideation: IdeationCar
 【平台】${platform.name}(${platform.spec}) | 受众:${audienceNames}
 【故事】${ideation.logline}
 【情感】核心:${ideation.coreEmotion} | 流量底座:${ideation.trafficBase} | 钩子:${ideation.hook}
-
+${coreConflictLine}${worldBuildingLine}
 严格只输出JSON对象，不含任何其他文字，结构如下：
 
 {
   "projectId": "proj_${Date.now()}",
   "acts": [{"name":"幕名","episodeRange":[1,N],"emotionTarget":"≤20字"}],
-  "characters": [{"name":"名","role":"protagonist|antagonist|supporting","archetype":"≤8字","flaw":"≤15字","arc":"≤20字","signatureLine":"≤15字"}],
+  "characters": [{"name":"名","role":"protagonist|antagonist|supporting","archetype":"≤8字","flaw":"≤15字","arc":"≤20字","signatureLine":"≤15字","appearance":"外形:年龄/身材/发型/肤色等≤30字","personality":"核心性格特质≤20字","clothingStyle":"标志性服装风格≤20字"}],
   "plotBombs": [{"episodeNumber":N,"type":"identity_reveal|betrayal|twist|emotional_peak","description":"≤30字"}],
   "hotEpisodes": [N,N,N,N],
   "episodes": [

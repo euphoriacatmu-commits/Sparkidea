@@ -46,6 +46,8 @@ export interface ProjectConfig {
   dialogueDensity: DialogueDensity
   platform: Platform
   visualStylePrompt?: string
+  coreConflict?: string     // 核心冲突：一句话描述全剧最根本的对立与张力
+  worldBuilding?: string    // 世界观：故事发生的背景、规则与特殊设定
 }
 
 // ——————————————————————————————————————
@@ -75,6 +77,10 @@ export interface Character {
   flaw: string
   arc: string
   signatureLine: string
+  // 角色视觉设计（为 AI 角色三视图生成服务）
+  appearance?: string       // 外形：年龄/身材/脸型/发型/肤色等外貌细节
+  personality?: string      // 性格：核心性格特质与行为模式
+  clothingStyle?: string    // 服装风格：常见穿搭与标志性造型
 }
 
 // ——————————————————————————————————————
